@@ -33,15 +33,12 @@ module.exports = (thrift, service, options={}) ->
   )
 
   wrap_thrift_fn = (fn) -> (args..., cb) ->
-    async.auto
-      connection: (cb_a) -> pool.acquire cb_a
-      returned_data: ['connection'].concat (cb_a, {connection}) ->
-        client = thrift.createClient(service, connection)
-        client[fn] args..., (returned_data...) -> cb_a(null, returned_data)
-    , (err, {returned_data, connection}) ->
-      return cb(err) if err
-      pool.release(connection) if connection
-      cb returned_data...
+    pool.acquire (err, connection) ->
+      return cb err if err?
+      client = thrift.createClient service, connection
+      client[fn] args..., (err, results...) ->
+        pool.release connection
+        cb err, results...
 
   _(service.Client.prototype).chain().keys().map((fn_name) ->
     [fn_name, wrap_thrift_fn(fn_name)]
