@@ -4,7 +4,7 @@
   "description": "A module that wraps thrift interfaces in connection pooling logic to make them more resilient.",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha -r coffee-errors --ignore-leaks --compilers coffee:coffee-script --recursive ./tests"
+    "test": "./node_modules/mocha/bin/mocha -r coffee-errors --ignore-leaks --compilers coffee:coffee-script/register --recursive ./test"
   },
   "license": "MIT",
   "dependencies": {
@@ -15,6 +15,6 @@
   "devDependencies": {
     "coffee-errors": "^0.8.6",
     "mocha": "^2.0.1",
-    "sinon": "^1.11.1"
+    "sinon": "^1.12.2"
   }
 }
