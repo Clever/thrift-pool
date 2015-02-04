@@ -28,9 +28,6 @@ create_pool = (thrift, options) ->
 
 module.exports = (thrift, service, options={}) ->
 
-  # console.log "in lib/index.coffee"
-  # console.log service
-
   throw new Error "You must specify #{key}" for key in ["host", "port"] when not options[key]
 
   options = _(options).defaults
@@ -42,16 +39,9 @@ module.exports = (thrift, service, options={}) ->
   pool = create_pool thrift, options
 
   wrap_thrift_fn = (fn) -> (args..., cb) ->
-    console.log "function is"
-    console.log fn
     pool.acquire (err, connection) ->
       return cb err if err?
       client = thrift.createClient service, connection
-      console.log "created client is"
-      console.log client
-      console.log "in args"
-      console.log args[0]
-      console.log "client[#{fn}]"
       client[fn] args..., (err, results...) ->
         pool.release connection
         cb err, results...

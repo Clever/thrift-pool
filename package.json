@@ -15,6 +15,6 @@
   "devDependencies": {
     "coffee-errors": "^0.8.6",
     "mocha": "^2.0.1",
-    "sinon": "^1.11.1"
+    "sinon": "^1.12.2"
   }
 }
