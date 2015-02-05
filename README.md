@@ -22,13 +22,11 @@ var thrift = require('thrift'),
   Types = require('./gen-nodejs/types'),
   thriftPool = require('thrift-pool');
 
-thrift_client = thriftPool(thrift, Service, {host: "localhost", port: 9090})
-
-// thrift_client is now an initialized thrift client that uses connection pooling behind the scenes
+var thrift_client = thriftPool(thrift, Service, {host: "localhost", port: 9090});
 
 /*
  * thrift_client is now an initialized thrift client that uses connection pooling behind the scenes
- * thrift.method(function(err, returned_data){console.log(err, returned_data)});
+ * thrift_client.method(function(err, returned_data){console.log(err, returned_data)});
  */
 
 ```
@@ -51,4 +49,4 @@ npm test
 - Source hosted at [GitHub](https://github.com/Clever/thrift-pool)
 - Report issues, questions, feature requests on [GitHub Issues](https://github.com/Clever/thrift-pool/issues)
 
-Pull requests are welcome! Please ensure your patches are well tested. Please create seperate branches for seperate features/patches.
+Pull requests are welcome! Please ensure your patches are well tested. Please create separate branches for separate features/patches.
