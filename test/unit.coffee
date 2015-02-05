@@ -24,11 +24,12 @@ describe "thrift-pool", ->
       fn: sinon.stub().yields null, "xyz"
       fn2: sinon.stub().yields new Error("error"), null
     @thrift =
-      createConnection: () =>
+      createConnection: =>
         @mock_connection.emit "connect"
         @mock_connection
       createClient: sinon.stub().returns @initialized_thrift_service
-    @wrappedPool = thriftPool @thrift, @thriftService, {"host", "port"}
+    @wrappedPool =
+      thriftPool @thrift, @thriftService, {"host", "port"}
 
   it "returns an object with all the original keys of the thrift service", ->
     assert @wrappedPool.fn
@@ -45,15 +46,15 @@ describe "thrift-pool", ->
   it 'returns same results that service client would', (done) ->
     async.series [
       (cb) =>
-        @wrappedPool.fn "foo", (err, data) =>
+        @wrappedPool.fn "foo", (err, data) ->
           assert.equal data, "xyz"
           cb()
       (cb) =>
-        @wrappedPool.fn2 "foo", (err, data) =>
+        @wrappedPool.fn2 "foo", (err, data) ->
           assert.notEqual err, null
           assert.equal null, data
           cb()
-    ], () ->
+    ], ->
       done()
 
 
@@ -62,7 +63,7 @@ describe 'create_pool unit', ->
   before ->
     @mock_connection = connection_mock()
     @thrift =
-      createConnection: () =>
+      createConnection: =>
         setImmediate => @mock_connection.emit "connect"
         @mock_connection
     @options =
@@ -96,5 +97,5 @@ describe 'create_pool unit', ->
       @pool.destroy connection
       # Connection should be ended, and pool size should have 1 less
       assert.equal connection.__ended, true
-      assert.equal prevPoolSize-1, @pool.getPoolSize()
+      assert.equal prevPoolSize - 1, @pool.getPoolSize()
       done()

@@ -3,10 +3,10 @@ async = require "async"
 genericPool = require "generic-pool"
 
 create_pool = (thrift, options) ->
-  genericPool.Pool(
+  genericPool.Pool
     name: "thrift"
     create: (cb) ->
-      connection = thrift.createConnection(options.host, options.port, {timeout: options.timeout})
+      connection = thrift.createConnection options.host, options.port, {timeout: options.timeout}
       connection.__ended = false
       connection.on "connect", ->
         connection.connection.setKeepAlive(true)
@@ -15,7 +15,7 @@ create_pool = (thrift, options) ->
         connection.__ended = true
       connection.on "error", (err) ->
         connection.__ended = true
-        cb(err)
+        cb err
     destroy: (connection) ->
       # connection.end() calls end() on a net stream, but doesn't set ended to true
       connection.connection.end()
@@ -24,9 +24,8 @@ create_pool = (thrift, options) ->
     max: options.max_connections
     min: options.min_connections
     idleTimeoutMillis: options.idle_timeout
-  )
 
-module.exports = (thrift, service, options={}) ->
+module.exports = (thrift, service, options = {}) ->
 
   throw new Error "You must specify #{key}" for key in ["host", "port"] when not options[key]
 
