@@ -1,4 +1,5 @@
 _ = require "underscore"
+_.mixin require 'underscore.deep'
 async = require "async"
 genericPool = require "generic-pool"
 
@@ -45,9 +46,13 @@ module.exports = (thrift, service, options = {}) ->
         pool.release connection
         cb err, results...
 
-  _(service.Client.prototype).chain().keys().map((fn_name) ->
-    [fn_name, wrap_thrift_fn(fn_name)]
-  ).object().value()
+  # The following returns a new object with all of the keys of an
+  # initialized client class.
+  # Note: _.mapValues only supports "simple", "vanilla" objects that
+  # are not associated with a class.  Since service.Client.prototype
+  # does not fall into that category, need to call _.clone first
+  _.mapValues _.clone(service.Client.prototype), (fn, name) ->
+    wrap_thrift_fn name
 
 # For unit testing
 _.extend module.exports, _private: {create_pool}
