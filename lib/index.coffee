@@ -34,7 +34,7 @@ module.exports = (thrift, service, options = {}) ->
     timeout: 250 # Timeout (in ms) for thrift.createConnection
     max_connections: 20 # Max number of connections to keep open
     min_connections: 2 # Min number of connections to keep open
-    idle_timeout: 2000 # Time (in ms) to wait until closing idle connections
+    idle_timeout: 30000 # Time (in ms) to wait until closing idle connections
 
   pool = create_pool thrift, options
 

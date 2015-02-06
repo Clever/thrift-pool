@@ -38,7 +38,7 @@ var thrift_client = thriftPool(thrift, Service, {host: "localhost", port: 9090})
 - `timeout` - Default: `250` - Timeout in ms for connection creation
 - `max_connections` - Default: `20` - Max number of connections to keep open
 - `min_connections` - Default: `2` - Min number of connections to keep open
-- `idle_timeout`: Default: `2000` - Time in ms to wait until closing idle connections
+- `idle_timeout`: Default: `30000` - Time in ms to wait until closing idle connections
 
 ## Development
 After making any changes, please add or run any required tests. Tests are located in the `test` directory, and can be run via npm:
