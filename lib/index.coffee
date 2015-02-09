@@ -7,6 +7,7 @@ create_pool = (thrift, options) ->
   genericPool.Pool
     name: "thrift"
     create: (cb) ->
+      cb = _.once cb
       connection = thrift.createConnection options.host, options.port, {timeout: options.timeout}
       connection.__ended = false
       connection.on "connect", ->
@@ -14,13 +15,14 @@ create_pool = (thrift, options) ->
         cb null, connection
       connection.on "close", ->
         connection.__ended = true
+        cb
       connection.on "error", (err) ->
         connection.__ended = true
         cb err
     destroy: (connection) ->
       # connection.end() calls end() on a net stream, but doesn't set ended to true
-      connection.connection.end()
       connection.__ended = true
+      connection.connection.end()
     validate: (connection) -> not connection.__ended
     max: options.max_connections
     min: options.min_connections
