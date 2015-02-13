@@ -4,7 +4,7 @@ A module that wraps thrift interfaces in connection pooling logic to make them m
 
 The [node thrift code](https://www.npmjs.com/package/thrift) exposes a `service` and `types` file.
 The node thrift client also exposes interfaces to create connections to the thrift server.
-There is no way to use the node thrift library to do connectionn pooling or to create new connections if existing connections fail.
+There is no way to use the node thrift library to do connection pooling or to create new connections if existing connections fail.
 
 This library takes in a thrift `service` and wraps the methods with connection pooling logic (based on [node-pool](https://github.com/coopernurse/node-pool)).
 
@@ -31,14 +31,19 @@ var thrift_client = thriftPool(thrift, Service, {host: "localhost", port: 9090})
 
 ```
 
-## Supported options
+## Supported pooling options
 
 - `host` - **Required** - The host of the thrift server to connect to
 - `port` - **Required** - The port of the thrift server to connect to
-- `timeout` - Default: `250` - Timeout in ms for connection creation
 - `max_connections` - Default: `20` - Max number of connections to keep open
-- `min_connections` - Default: `2` - Min number of connections to keep open
+- `min_connections` - Default: `0` - Min number of connections to keep open
 - `idle_timeout`: Default: `30000` - Time in ms to wait until closing idle connections
+
+## Thrift options - optional
+All thrift options are supported, pass in the thrift options the same way they would be passed if creating a new thrift connection.  Passing thrift options is optional.
+**Note:**  If the `timeout` option is passed in the thrift_options object, a `timeout` listener will be added to the connection.
+  - If the `timeout` event is emitted on a connection while it is in the pool, the connection will be invalidated and treated the same way as if an `error` or `close` event had been emitted.
+  - If the `timeout` event is emitted after the connection is acquired a timeout error will be returned: `new Error "Connection timeout"`.
 
 ## Development
 After making any changes, please add or run any required tests. Tests are located in the `test` directory, and can be run via npm:
