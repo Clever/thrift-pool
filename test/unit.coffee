@@ -137,6 +137,25 @@ describe "thrift-pool", ->
       assert.equal data, null
       done()
 
+  it 'returns an error if connection is closed during client callback', (done) ->
+    connection_close_error = new Error "Connection closed"
+    initialized_thrift_service =
+      fn: (arg, cb) =>
+        setImmediate => @mock_connection.emit "close"
+        wait = -> cb null, arg
+        setTimeout wait, 1000
+    thrift =
+      createConnection: =>
+        setImmediate => @mock_connection.emit "connect"
+        @mock_connection
+      createClient: sinon.stub().returns initialized_thrift_service
+    wrappedPool = thriftPool thrift, @thriftService, {"host", "port"}, {timeout: 100}
+    wrappedPool.fn "abc", (err, data) ->
+      assert.deepEqual err, connection_close_error
+      assert.equal data, null
+      done()
+
+
 # Create_pool unit makes sure create_pool properly initializes a generic-pool
 # for thrift. Each of these tests creates a new pool which uses a single mock
 # connection (generic_pool handles and tests all other pooling functions).

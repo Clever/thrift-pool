@@ -35,12 +35,21 @@ var thrift_client = thriftPool(thrift, Service, {host: "localhost", port: 9090})
 
 - `host` - **Required** - The host of the thrift server to connect to
 - `port` - **Required** - The port of the thrift server to connect to
-- `max_connections` - Default: `20` - Max number of connections to keep open
+- `max_connections` - Default: `2` - Max number of connections to keep open
 - `min_connections` - Default: `0` - Min number of connections to keep open
 - `idle_timeout`: Default: `30000` - Time in ms to wait until closing idle connections
 
 ## Thrift options - optional
 All thrift options are supported, pass in the thrift options the same way they would be passed if creating a new thrift connection.  Passing thrift options is optional.
+
+```javascript
+var thrift_options = {
+    timeout: 250
+};
+var thrift_client = thriftPool(thrift, Service, {host: "localhost", port: 9090}, thrift_options);
+
+```
+
 **Note:**  If the `timeout` option is passed in the thrift_options object, a `timeout` listener will be added to the connection.
   - If the `timeout` event is emitted on a connection while it is in the pool, the connection will be invalidated and treated the same way as if an `error` or `close` event had been emitted.
   - If the `timeout` event is emitted after the connection is acquired a timeout error will be returned: `new Error "Connection timeout"`.
@@ -51,6 +60,7 @@ After making any changes, please add or run any required tests. Tests are locate
 npm test
 ```
 
+- The [debug](https://github.com/visionmedia/debug) package is used to simplify debugging.  To turn on logging: `export DEBUG=thrift-pool`
 - Source hosted at [GitHub](https://github.com/Clever/thrift-pool)
 - Report issues, questions, feature requests on [GitHub Issues](https://github.com/Clever/thrift-pool/issues)
 

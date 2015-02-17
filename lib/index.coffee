@@ -1,7 +1,8 @@
 _ = require "underscore"
-_.mixin require 'underscore.deep'
+_.mixin require "underscore.deep"
 async = require "async"
 genericPool = require "generic-pool"
+debug = require("debug")("thrift-pool")
 
 # create_cb creates and initializes a connection
 #  @param thrift, used to create connection
@@ -13,25 +14,23 @@ create_cb = (thrift, pool_options, thrift_options, cb) ->
   connection = thrift.createConnection pool_options.host, pool_options.port, thrift_options
   connection.__ended = false
   connection.on "connect", ->
-    # console.log "in create connect"
+    debug "in connect callback"
     connection.connection.setKeepAlive(true)
     cb null, connection
   connection.on "error", (err) ->
-    # console.log "in create error"
+    debug "in error callback"
     connection.__ended = true
     cb err
-
-  # "close" can only be called after "connect" event
+  # "close" should only be called after a "connect" event
   connection.on "close", ->
-    # console.log "in create close"
+    debug "in close callback"
     connection.__ended = true
-
   # timeout listener only applies if timeout is passed into thrift_options
   # if "timeout" emits, it sets the connection as ended
   if thrift_options.timeout?
-    # console.log "adding timeout option"
+    debug "adding timeout listener"
     connection.on "timeout", ->
-      # console.log "in create timeout"
+      debug "in timeout callback"
       connection.__ended = true
 
 
@@ -47,10 +46,10 @@ create_pool = (thrift, pool_options = {}, thrift_options = {}) ->
     create: (cb) ->
       create_cb thrift, pool_options, thrift_options, cb
     destroy: (connection) ->
-      # console.log "in destroy"
+      debug "in destroy"
       connection.end()
     validate: (connection) ->
-      # console.log "in validate"
+      debug "in validate"
       not connection.__ended
     max: pool_options.max_connections
     min: pool_options.min_connections
@@ -67,36 +66,65 @@ module.exports = (thrift, service, pool_options = {}, thrift_options = {}) ->
 
   pool = create_pool thrift, pool_options, thrift_options
 
-  add_listeners = (connection, cb_error, cb_timeout) ->
+  # add_listeners adds listeners for error, close, and timeout
+  #   @param connection, connection to add listeners to
+  #   @param cb_error, callback to attach to "error" listener
+  #   @param cb_timeout, callback to attach to "timeout" listener
+  #   @param cb_close, callback to attach to "close" listener
+  add_listeners = (connection, cb_error, cb_timeout, cb_close) ->
     connection.on "error", cb_error
+    connection.on "close", cb_close
     if thrift_options.timeout?
       connection.on "timeout", cb_timeout
 
-  remove_listeners = (connection, cb_error, cb_timeout) ->
-    connection.removeListener 'error', cb_error
+  # remove_listeners removes error, timeout, and close listeners with given callbacks
+  #   @param connection, connection to remove listeners from
+  #   @param cb_error, error callback to remove from "error" listener
+  #   @param cb_timeout, timeout callback to remove from "timeout" listener
+  #   @param cb_close, close callback to remove from "close" listener
+  remove_listeners = (connection, cb_error, cb_timeout, cb_close) ->
+    connection.removeListener "error", cb_error
+    connection.removeListener "close", cb_close
     if thrift_options.timeout?
-      connection.removeListener 'timeout', cb_timeout
+      connection.removeListener "timeout", cb_timeout
 
+  # wrap_thrift_fn when called with a function and arguments/callback:
+  #   - acquires a connection
+  #   - adds additional connection event listeners
+  #   - creates a client with the acquired connection
+  #   - calls client with fn and passed args and callback
+  #   - connection is released before results are returned
+  #  @return, function that takes in arguments and a callback
+  #
   wrap_thrift_fn = (fn) -> (args..., cb) ->
     pool.acquire (err, connection) ->
+      debug "Connection acquired"
+      debug {err}
+      debug {connection}
       return cb err if err?
       cb = _.once cb
       cb_error = (err) ->
-        # console.log "in cb_error listener"
+        debug "in error callback, post-acquire listener"
         cb err
       cb_timeout = ->
-        # console.log "in cb_timeout listener"
+        debug "in timeout callback, post-acquire listener"
         cb new Error "Connection timeout"
-      add_listeners connection, cb_error, cb_timeout
+      cb_close = ->
+        debug "in close callback, post-acquire listener"
+        cb new Error "Connection closed"
+      add_listeners connection, cb_error, cb_timeout, cb_close
       client = thrift.createClient service, connection
+      debug "Client created"
+      debug {client}
       client[fn] args..., (err, results...) ->
-        remove_listeners connection, cb_error, cb_timeout
+        debug "In client callback"
+        remove_listeners connection, cb_error, cb_timeout, cb_close
         pool.release connection
         cb err, results...
 
   # The following returns a new object with all of the keys of an
   # initialized client class.
-  # Note: _.mapValues only supports "simple", "vanilla" objects that*
+  # Note: _.mapValues only supports "simple", "vanilla" objects that
   # are not associated with a class.  Since service.Client.prototype
   # does not fall into that category, need to call _.clone first
   _.mapValues _.clone(service.Client.prototype), (fn, name) ->
