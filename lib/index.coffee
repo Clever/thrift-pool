@@ -4,6 +4,9 @@ async = require "async"
 genericPool = require "generic-pool"
 debug = require("debug")("thrift-pool")
 
+TIMEOUT_MESSAGE = "Thrift-pool: Connection timeout"
+CLOSE_MESSAGE = "Thrift-pool: Connection closed"
+
 # create_cb creates and initializes a connection
 #  @param thrift, used to create connection
 #  @param pool_options, host and port used to create connection
@@ -20,17 +23,17 @@ create_cb = (thrift, pool_options, thrift_options, cb) ->
     debug "in error callback"
     connection.__ended = true
     cb err
-  # "close" should only be called after a "connect" event
   connection.on "close", ->
     debug "in close callback"
     connection.__ended = true
+    cb new Error CLOSE_MESSAGE
   # timeout listener only applies if timeout is passed into thrift_options
-  # if "timeout" emits, it sets the connection as ended
   if thrift_options.timeout?
     debug "adding timeout listener"
     connection.on "timeout", ->
       debug "in timeout callback"
       connection.__ended = true
+      cb new Error TIMEOUT_MESSAGE
 
 # create_pool initializes a generic-pool
 #   @param thrift library to use to in create_cb
@@ -54,7 +57,7 @@ create_pool = (thrift, pool_options = {}, thrift_options = {}) ->
 
 module.exports = (thrift, service, pool_options = {}, thrift_options = {}) ->
 
-  throw new Error "You must specify #{key}" for key in ["host", "port"] when not pool_options[key]
+  throw new Error "Thrift-pool: You must specify #{key}" for key in ["host", "port"] when not pool_options[key]
 
   pool_options = _(pool_options).defaults
     max_connections: 1 # Max number of connections to keep open at any given time
@@ -104,10 +107,10 @@ module.exports = (thrift, service, pool_options = {}, thrift_options = {}) ->
         cb err
       cb_timeout = ->
         debug "in timeout callback, post-acquire listener"
-        cb new Error "Connection timeout"
+        cb new Error TIMEOUT_MESSAGE
       cb_close = ->
         debug "in close callback, post-acquire listener"
-        cb new Error "Connection closed"
+        cb new Error CLOSE_MESSAGE
       add_listeners connection, cb_error, cb_timeout, cb_close
       client = thrift.createClient service, connection
       debug "Client created"
@@ -127,4 +130,4 @@ module.exports = (thrift, service, pool_options = {}, thrift_options = {}) ->
     wrap_thrift_fn name
 
 # For unit testing
-_.extend module.exports, _private: {create_pool}
+_.extend module.exports, _private: {create_pool, TIMEOUT_MESSAGE, CLOSE_MESSAGE}

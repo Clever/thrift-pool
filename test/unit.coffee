@@ -120,7 +120,7 @@ describe "thrift-pool", ->
       done()
 
   it 'returns an error if connection timeouts during client callback', (done) ->
-    connection_timeout_error = new Error "Connection timeout"
+    connection_timeout_error = new Error _private.TIMEOUT_MESSAGE
     initialized_thrift_service =
       fn: (arg, cb) =>
         setImmediate => @mock_connection.emit "timeout"
@@ -138,7 +138,7 @@ describe "thrift-pool", ->
       done()
 
   it 'returns an error if connection is closed during client callback', (done) ->
-    connection_close_error = new Error "Connection closed"
+    connection_close_error = new Error _private.CLOSE_MESSAGE
     initialized_thrift_service =
       fn: (arg, cb) =>
         setImmediate => @mock_connection.emit "close"
@@ -167,7 +167,6 @@ describe "thrift-pool", ->
 #     behavior for a connection when it is in a pool, being created, or acquired.
 #   - Passing "timeout" in thrift_options adds "timeout" listener and behaves
 #     as expected.
-#
 describe 'create_pool unit', ->
   # Initialize mocks to use in pool creation
   before ->
@@ -258,6 +257,36 @@ describe 'create_pool unit', ->
     setImmediate => @mock_connection.emit "error", connection_error
     pool.acquire (err, connection) =>
       assert.deepEqual err, connection_error
+      assert.equal connection, null
+      assert @thrift.createConnection.called
+      assert.equal pool.getPoolSize(), 0
+      assert.equal pool.availableObjectsCount(), 0
+      done()
+
+  # Tests "create" function, with "close" event
+  # as connection goes from create -> acquire.
+  it 'returns an error to acquire if close emits during connection creation', (done) ->
+    @thrift.createConnection.reset()
+    close_error = new Error _private.CLOSE_MESSAGE
+    pool = _private.create_pool @thrift, @options
+    setImmediate => @mock_connection.emit "close", close_error
+    pool.acquire (err, connection) =>
+      assert.deepEqual err, close_error
+      assert.equal connection, null
+      assert @thrift.createConnection.called
+      assert.equal pool.getPoolSize(), 0
+      assert.equal pool.availableObjectsCount(), 0
+      done()
+
+  # Tests "create" function, with "timeout" event and timeout in thrift options
+  # as connection goes from create -> acquire.
+  it 'returns an error to acquire if timeout emits during connection creation', (done) ->
+    @thrift.createConnection.reset()
+    timeout_error = new Error _private.TIMEOUT_MESSAGE
+    pool = _private.create_pool @thrift, @options, {timeout: 10}
+    setImmediate => @mock_connection.emit "timeout", timeout_error
+    pool.acquire (err, connection) =>
+      assert.deepEqual err, timeout_error
       assert.equal connection, null
       assert @thrift.createConnection.called
       assert.equal pool.getPoolSize(), 0
