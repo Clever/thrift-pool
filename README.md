@@ -12,7 +12,7 @@ This library takes in a thrift `service` and wraps the methods with connection p
 ## Installation
 
 ```
-npm install thrift-pool
+npm install node-thrift-pool
 ```
 
 ## Usage
@@ -20,7 +20,7 @@ npm install thrift-pool
 var thrift = require('thrift'),
   Service = require('./gen-nodejs/Service'),
   Types = require('./gen-nodejs/types'),
-  thriftPool = require('thrift-pool');
+  thriftPool = require('node-thrift-pool');
 
 var thrift_client = thriftPool(thrift, Service, {host: "localhost", port: 9090});
 

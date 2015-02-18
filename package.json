@@ -1,5 +1,5 @@
 {
-  "name": "thrift-pool",
+  "name": "node-thrift-pool",
   "version": "1.0.0",
   "description": "A module that wraps thrift interfaces in connection pooling logic to make them more resilient.",
   "main": "index.js",
