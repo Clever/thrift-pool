@@ -19,4 +19,3 @@ publish:
     username: {{npm_drone_username}}
     password: {{npm_drone_password}}
     branch: master
-    registry: "https://clever.registry.nodejitsu.com"
