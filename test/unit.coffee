@@ -199,38 +199,6 @@ describe 'create_pool unit', ->
         pool.release connection
         cb()
 
-    # Emits a connect event, acquires, and releases the connection.
-    @connect_release = (pool, cb) =>
-      # Connection succeeds in creation and is released
-      setImmediate => @mock_connection.emit "connect"
-      pool.acquire (err, connection) =>
-        @assert_valid err, connection
-        pool.release connection
-        cb()
-
-    # Used to test the event emitters that invalidate a connection.
-    # Flow: creates/releases connection -> emits emit_fn -> acquires connection.
-    @emit_invalidates_connection = (emit_fn, done, thrift_options = {}) =>
-      pool = _private.create_pool @thrift, @options, thrift_options
-      async.series [
-        (cb) =>
-          @connect_release pool, cb
-        (cb) =>
-          # Call emit function when connection is in pool
-          @mock_connection.end.reset()
-          @thrift.createConnection.reset()
-          emit_fn @mock_connection
-          wait = -> cb()
-          setTimeout wait, 1000
-        (cb) =>
-          # Connection in pool should be marked invalid, destroyed,
-          # and a new connection is created and returned
-          assert.equal pool.getPoolSize(), 1
-          assert.equal pool.availableObjectsCount(), 1
-          @acquire_destroys pool, cb
-      ], ->
-        done()
-
   afterEach ->
     @mock_connection.removeAllListeners() # Removes all event listeners
 
@@ -334,6 +302,39 @@ describe 'create_pool unit', ->
         @acquire_destroys pool, cb
     ], ->
       done()
+
+  before ->
+    # Emits a connect event, acquires, and releases the connection.
+    @connect_release = (pool, cb) =>
+      # Connection succeeds in creation and is released
+      setImmediate => @mock_connection.emit "connect"
+      pool.acquire (err, connection) =>
+        @assert_valid err, connection
+        pool.release connection
+        cb()
+
+    # Used to test the event emitters that invalidate a connection.
+    # Flow: creates/releases connection -> emits emit_fn -> acquires connection.
+    @emit_invalidates_connection = (emit_fn, done, thrift_options = {}) =>
+      pool = _private.create_pool @thrift, @options, thrift_options
+      async.series [
+        (cb) =>
+          @connect_release pool, cb
+        (cb) =>
+          # Call emit function when connection is in pool
+          @mock_connection.end.reset()
+          @thrift.createConnection.reset()
+          emit_fn @mock_connection
+          wait = -> cb()
+          setTimeout wait, 1000
+        (cb) =>
+          # Connection in pool should be marked invalid, destroyed,
+          # and a new connection is created and returned
+          assert.equal pool.getPoolSize(), 1
+          assert.equal pool.availableObjectsCount(), 1
+          @acquire_destroys pool, cb
+      ], ->
+        done()
 
   # Tests "error" event as connection goes from pool -> acquire.
   it "invalidates a connection in a pool when connection emits error", (done) ->
