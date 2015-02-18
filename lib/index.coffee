@@ -8,7 +8,6 @@ debug = require("debug")("thrift-pool")
 #  @param thrift, used to create connection
 #  @param pool_options, host and port used to create connection
 #  @param thrift_options, passed to thrift connection,
-#
 create_cb = (thrift, pool_options, thrift_options, cb) ->
   cb = _.once cb
   connection = thrift.createConnection pool_options.host, pool_options.port, thrift_options
@@ -33,13 +32,11 @@ create_cb = (thrift, pool_options, thrift_options, cb) ->
       debug "in timeout callback"
       connection.__ended = true
 
-
 # create_pool initializes a generic-pool
 #   @param thrift library to use to in create_cb
 #   @param pool_options, host/port are used in create_cb
 #          max, min, idleTimeouts are used by generic pool
 #   @param thrift_options used in create_cb
-#
 create_pool = (thrift, pool_options = {}, thrift_options = {}) ->
   pool = genericPool.Pool
     name: "thrift"
@@ -60,9 +57,9 @@ module.exports = (thrift, service, pool_options = {}, thrift_options = {}) ->
   throw new Error "You must specify #{key}" for key in ["host", "port"] when not pool_options[key]
 
   pool_options = _(pool_options).defaults
-    max_connections: 2 # Max number of connections to keep open
-    min_connections: 0 # Min number of connections to keep open
-    idle_timeout: 30000 # Time (in ms) to wait until closing idle connections
+    max_connections: 1 # Max number of connections to keep open at any given time
+    min_connections: 0 # Min number of connections to keep open at any given time
+    idle_timeout: 30000 # Time (ms) to wait until closing idle connections
 
   pool = create_pool thrift, pool_options, thrift_options
 
@@ -95,7 +92,6 @@ module.exports = (thrift, service, pool_options = {}, thrift_options = {}) ->
   #   - calls client with fn and passed args and callback
   #   - connection is released before results are returned
   #  @return, function that takes in arguments and a callback
-  #
   wrap_thrift_fn = (fn) -> (args..., cb) ->
     pool.acquire (err, connection) ->
       debug "Connection acquired"

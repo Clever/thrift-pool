@@ -32,15 +32,16 @@ var thrift_client = thriftPool(thrift, Service, {host: "localhost", port: 9090})
 ```
 
 ## Supported pooling options
+Options to use when creating pool, defaults match those used by node-pool.
 
 - `host` - **Required** - The host of the thrift server to connect to
 - `port` - **Required** - The port of the thrift server to connect to
-- `max_connections` - Default: `2` - Max number of connections to keep open
-- `min_connections` - Default: `0` - Min number of connections to keep open
-- `idle_timeout`: Default: `30000` - Time in ms to wait until closing idle connections
+- `max_connections` - Default: `1` - Max number of connections to keep open at any given time
+- `min_connections` - Default: `0` - Min number of connections to keep open at any given time
+- `idle_timeout` - Default: `30000` - Time (ms) to wait until closing idle connections
 
 ## Thrift options - optional
-All thrift options are supported, pass in the thrift options the same way they would be passed if creating a new thrift connection.  Passing thrift options is optional.
+All thrift options are supported and can be passed in as an object in addition to the pooling options.
 
 ```javascript
 var thrift_options = {
