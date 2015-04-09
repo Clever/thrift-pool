@@ -6,6 +6,11 @@ SHELL := /bin/bash
 
 TESTS=$(shell cd test && ls *.coffee | sed s/\.coffee$$//)
 
+build: index.js
+
+index.js: lib/index.coffee
+	node_modules/coffee-script/bin/coffee --bare -o . -c lib/index.coffee
+
 test: $(TESTS) lint
 
 lint:
