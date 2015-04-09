@@ -1,8 +1,8 @@
 image: node0.10
 script:
-  - ./test_drone.sh
   - nvm install 0.10.29
   - nvm use 0.10.29
+  - ./test_drone.sh
 notify:
   email:
     recipients:
