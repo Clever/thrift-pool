@@ -1,6 +1,6 @@
 assert = require "assert"
 mocha = require "mocha"
-_ = require "underscore"
+_ = require "lodash"
 thriftPool = {_private} = require "../lib/index"
 async  = require 'async'
 sinon = require "sinon"
@@ -42,7 +42,7 @@ describe "thrift-pool", ->
   it "returns an object with the original keys of the thrift service", ->
     assert @wrappedPool.fn
     assert.equal typeof @wrappedPool.fn, "function"
-    assert.deepEqual _(@wrappedPool).keys(), ["fn", "fn2"]
+    assert.deepEqual _.functions(@wrappedPool), ["fn", "fn2"]
 
   it "creates a client with connection from pool when calling a method", (done) ->
     @wrappedPool.fn "foo", "bar", (err, data) =>
@@ -154,7 +154,6 @@ describe "thrift-pool", ->
       assert.deepEqual err, connection_close_error
       assert.equal data, null
       done()
-
 
 # Create_pool unit makes sure create_pool properly initializes a generic-pool
 # for thrift. Each of these tests creates a new pool which uses a single mock
@@ -381,3 +380,36 @@ describe 'create_pool unit', ->
           cb()
     ], ->
       done()
+
+describe 'retry_fn', ->
+  retry_fn = _private.retry_fn
+  class TestError extends Error
+    constructor: (@message, @should_retry) -> super message
+
+  should_retry = (err) -> err.should_retry
+  fail_always = (cb) -> cb new TestError 'Failure', false
+  fail_n = (num_failures) ->
+    n = 0
+    (cb) ->
+      if n < num_failures
+        n += 1
+        cb new TestError "Failure #{n}", true
+      else
+        cb null
+
+  it 'succeeds if there are at most n retryable failures', ->
+    n = 3
+    fn = fail_n n
+    retry_fn n, should_retry, fn, (err) ->
+      assert.equal err, null
+
+  it 'fails if there are more than n retryable failures', ->
+    n = 3
+    fn = fail_n n
+    retry_fn n - 1, should_retry, fn, (err) ->
+      assert.deepEqual err, new TestError "Failure #{n}", true
+
+  it 'fails on any non-retryable failure', ->
+    retry_fn 3, should_retry, fail_always, (err) ->
+      assert.deepEqual err, new TestError 'Failure', false
+

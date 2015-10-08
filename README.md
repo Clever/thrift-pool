@@ -38,7 +38,8 @@ Options to use when creating pool, defaults match those used by node-pool.
 - `port` - **Required** - The port of the thrift server to connect to
 - `max_connections` - Default: `1` - Max number of connections to keep open at any given time
 - `min_connections` - Default: `0` - Min number of connections to keep open at any given time
-- `idle_timeout` - Default: `30000` - Time (ms) to wait until closing idle connections
+- `idle_timeout` - Default: `10000` - Time (ms) to wait until closing idle connections
+- `retries` - Default: `2` - Number of times to retry if the connection fails
 
 ## Thrift options - optional
 All thrift options are supported and can be passed in as an object in addition to the pooling options.
