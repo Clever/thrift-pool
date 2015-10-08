@@ -1,6 +1,6 @@
 {
   "name": "node-thrift-pool",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A module that wraps thrift interfaces in connection pooling logic to make them more resilient.",
   "main": "index.js",
   "scripts": {
@@ -12,8 +12,7 @@
     "async": "^0.9.0",
     "debug": "^2.1.1",
     "generic-pool": "^2.1.1",
-    "underscore": "^1.7.0",
-    "underscore.deep": "^0.5.1"
+    "lodash": "^3.10.1"
   },
   "devDependencies": {
     "clever-coffeescript-style-guide": "^0.3.0",
