@@ -51,6 +51,7 @@ create_pool = (thrift, pool_options = {}, thrift_options = {}) ->
     validate: (connection) ->
       debug "in validate"
       not connection.__ended
+    log: pool_options.log
     max: pool_options.max_connections
     min: pool_options.min_connections
     idleTimeoutMillis: pool_options.idle_timeout
@@ -60,6 +61,7 @@ module.exports = (thrift, service, pool_options = {}, thrift_options = {}) ->
   throw new Error "Thrift-pool: You must specify #{key}" for key in ["host", "port"] when not pool_options[key]
 
   pool_options = _(pool_options).defaults
+    log: false # true/false or function
     max_connections: 1 # Max number of connections to keep open at any given time
     min_connections: 0 # Min number of connections to keep open at any given time
     idle_timeout: 30000 # Time (ms) to wait until closing idle connections
