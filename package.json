@@ -1,6 +1,6 @@
 {
-  "name": "gaiden-thrift-pool",
-  "version": "1.0.1",
+  "name": "node-thrift-pool",
+  "version": "1.0.4",
   "description": "A module that wraps thrift interfaces in connection pooling logic to make them more resilient.",
   "main": "index.js",
   "scripts": {
