@@ -36,6 +36,7 @@ Options to use when creating pool, defaults match those used by node-pool.
 
 - `host` - **Required** - The host of the thrift server to connect to
 - `port` - **Required** - The port of the thrift server to connect to
+- `log` - Default: `false` - true/false or function
 - `max_connections` - Default: `1` - Max number of connections to keep open at any given time
 - `min_connections` - Default: `0` - Min number of connections to keep open at any given time
 - `idle_timeout` - Default: `30000` - Time (ms) to wait until closing idle connections
