@@ -110,12 +110,18 @@ module.exports = (thrift, service, pool_options = {}, thrift_options = {}) ->
       cb = _.once cb
       cb_error = (err) ->
         debug "in error callback, post-acquire listener"
+        remove_listeners connection, cb_error, cb_timeout, cb_close
+        pool.release connection
         cb err
       cb_timeout = ->
         debug "in timeout callback, post-acquire listener"
+        remove_listeners connection, cb_error, cb_timeout, cb_close
+        pool.release connection
         cb new Error TIMEOUT_MESSAGE
       cb_close = ->
         debug "in close callback, post-acquire listener"
+        remove_listeners connection, cb_error, cb_timeout, cb_close
+        pool.release connection
         cb new Error CLOSE_MESSAGE
       add_listeners connection, cb_error, cb_timeout, cb_close
       client = thrift.createClient service, connection
