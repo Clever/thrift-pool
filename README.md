@@ -41,6 +41,7 @@ Options to use when creating pool, defaults match those used by node-pool.
 - `min_connections` - Default: `0` - Min number of connections to keep open at any given time
 - `idle_timeout` - Default: `30000` - Time (ms) to wait until closing idle connections
 - `ttl` - Default: `undefined` - Time (+/-50%) (ms) past which to destroy the connection. For more explanation, see below
+- `ssl` - Default: `false` - If true, SSL/TLS connection will be used.
 
 ### ttl
 
@@ -57,6 +58,7 @@ We use some amount of randomness (+/- 50%) of this time to ensure that all of yo
 As an example, we have our connection drain timeout set to five minutes, so when you're removing instances from the ELB, any connections older than five minutes are just cut off.
 Based on that, we set our `ttl` to two minutes, and guarantee that all connections will be destroyed sometime after one to three minutes.
 
+=======
 
 ## Thrift options - optional
 All thrift options are supported and can be passed in as an object in addition to the pooling options.
