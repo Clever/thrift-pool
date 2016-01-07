@@ -13,7 +13,11 @@ CLOSE_MESSAGE = "Thrift-pool: Connection closed"
 #  @param thrift_options, passed to thrift connection,
 create_cb = (thrift, pool_options, thrift_options, cb) ->
   cb = _.once cb
-  connection = thrift.createConnection pool_options.host, pool_options.port, thrift_options
+  pool_options.ssl ?= false
+  if pool_options.ssl
+    connection = thrift.createSSLConnection pool_options.host, pool_options.port, thrift_options
+  else
+    connection = thrift.createConnection pool_options.host, pool_options.port, thrift_options
   connection.__ended = false
   connection.on "connect", ->
     debug "in connect callback"
