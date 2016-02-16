@@ -41,6 +41,7 @@ Options to use when creating pool, defaults match those used by node-pool.
 - `min_connections` - Default: `0` - Min number of connections to keep open at any given time
 - `idle_timeout` - Default: `30000` - Time (ms) to wait until closing idle connections
 - `ttl` - Default: `undefined` - Time (+/-50%) (ms) past which to destroy the connection. For more explanation, see below
+- `ssl` - Default: `false` - Whether to use SSL/TLS
 
 ### ttl
 
