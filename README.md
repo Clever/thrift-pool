@@ -60,6 +60,7 @@ Based on that, we set our `ttl` to two minutes, and guarantee that all connectio
 
 =======
 
+
 ## Thrift options - optional
 All thrift options are supported and can be passed in as an object in addition to the pooling options.
 
