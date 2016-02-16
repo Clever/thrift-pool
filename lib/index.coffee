@@ -13,7 +13,11 @@ CLOSE_MESSAGE = "Thrift-pool: Connection closed"
 #  @param thrift_options, passed to thrift connection,
 create_cb = (thrift, pool_options, thrift_options, cb) ->
   cb = _.once cb
-  connection = thrift.createConnection pool_options.host, pool_options.port, thrift_options
+  pool_options.ssl ?= false
+  if pool_options.ssl
+    connection = thrift.createSSLConnection pool_options.host, pool_options.port, thrift_options
+  else
+    connection = thrift.createConnection pool_options.host, pool_options.port, thrift_options
   connection.__ended = false
   if pool_options.ttl?
     connection.__reap_time = Date.now() + _.random (pool_options.ttl / 2), (pool_options.ttl * 1.5)
@@ -110,12 +114,18 @@ module.exports = (thrift, service, pool_options = {}, thrift_options = {}) ->
       cb = _.once cb
       cb_error = (err) ->
         debug "in error callback, post-acquire listener"
+        remove_listeners connection, cb_error, cb_timeout, cb_close
+        pool.release connection
         cb err
       cb_timeout = ->
         debug "in timeout callback, post-acquire listener"
+        remove_listeners connection, cb_error, cb_timeout, cb_close
+        pool.release connection
         cb new Error TIMEOUT_MESSAGE
       cb_close = ->
         debug "in close callback, post-acquire listener"
+        remove_listeners connection, cb_error, cb_timeout, cb_close
+        pool.release connection
         cb new Error CLOSE_MESSAGE
       add_listeners connection, cb_error, cb_timeout, cb_close
       client = thrift.createClient service, connection
