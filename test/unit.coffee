@@ -278,18 +278,29 @@ describe 'create_pool unit', ->
   #   - connection is valid, it is returned
   #   - connection is not valid, it is destroyed, new connection is returned.
   it 'properly validates a connection', (done) ->
-    pool = _private.create_pool @thrift, @options
+    pool = _private.create_pool @thrift, _.extend {ttl: 100}, @options
     async.series [
       (cb) =>
         # Connection is valid and is released
         @mock_connection.end.reset()
         setImmediate => @mock_connection.emit "connect"
         @thrift.createConnection.reset()
+        @mock_connection.__reap_time = Date.now() - 1
         pool.acquire (err, connection) =>
           @assert_valid err, connection
           assert.equal @mock_connection.end.called, false
           pool.release connection
           cb()
+      (cb) =>
+        # Connection is invalid due to TTL and is destroyed and a
+        # new connection is created and returned
+        @mock_connection.end.reset()
+        setImmediate => @mock_connection.emit "connect"
+        @thrift.createConnection.reset()
+        @mock_connection.__reap_time = Date.now() + 1
+        assert.equal pool.getPoolSize(), 1
+        assert.equal pool.availableObjectsCount(), 1
+        @acquire_destroys pool, cb
       (cb) =>
         # Connection in pool is marked invalid, destroyed, and a
         # new connection is created and returned

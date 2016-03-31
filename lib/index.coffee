@@ -15,9 +15,18 @@ id = 0
 #  @param thrift_options, passed to thrift connection,
 create_cb = (thrift, pool_options, thrift_options, cb) ->
   cb = _.once cb
-  connection = thrift.createConnection pool_options.host, pool_options.port, thrift_options
+
+  pool_options.ssl ?= false
+  if pool_options.ssl
+    connection = thrift.createSSLConnection pool_options.host, pool_options.port, thrift_options
+  else
+    connection = thrift.createConnection pool_options.host, pool_options.port, thrift_options
+
   connection.__ended = false
   connection.__id = id += 1
+  if pool_options.ttl?
+    connection.__reap_time = Date.now() + _.random (pool_options.ttl / 2), (pool_options.ttl * 1.5)
+
   connection.on "connect", ->
     debug "in connect callback"
     connection.connection.setKeepAlive(true)
@@ -54,7 +63,10 @@ create_pool = (thrift, pool_options = {}, thrift_options = {}) ->
       connection.end()
     validate: (connection) ->
       debug "in validate"
-      not connection.__ended
+      return false if connection.__ended
+      return true unless pool_options.ttl?
+      connection.__reap_time < Date.now()
+    log: pool_options.log
     max: pool_options.max_connections
     min: pool_options.min_connections
     idleTimeoutMillis: pool_options.idle_timeout
@@ -76,6 +88,7 @@ module.exports = (thrift, service, pool_options = {}, thrift_options = {}) ->
   throw new Error "Thrift-pool: You must specify #{key}" for key in ["host", "port"] when not pool_options[key]
 
   pool_options = _.defaults pool_options,
+    log: false # true/false or function
     max_connections: 1 # Max number of connections to keep open at any given time
     min_connections: 0 # Min number of connections to keep open at any given time
     idle_timeout: 10000 # Time (ms) to wait until closing idle connections
