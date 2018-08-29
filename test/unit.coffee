@@ -298,7 +298,7 @@ describe 'create_pool unit', ->
         @mock_connection.end.reset()
         setImmediate => @mock_connection.emit "connect"
         @thrift.createConnection.reset()
-        @mock_connection.__reap_time = Date.now() + 1
+        @mock_connection.__reap_time = Date.now() - 1
         assert.equal pool.getPoolSize(), 1
         assert.equal pool.availableObjectsCount(), 1
         @acquire_destroys pool, cb
